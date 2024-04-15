@@ -299,6 +299,8 @@ const SCALES = {
 
 let isPlaying = false
 let animationIds = AUDIO_BLOCKS.reduce(function createKeyForAnimationId(accum, val) {
+  console.log(AUDIO_BLOCKS)
+  console.log(val)
   accum[val.id] = null;
   return accum;
 }, {});
