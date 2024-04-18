@@ -248,7 +248,6 @@ body {
   }
 }
 </style>
-
 <body>
   <div id="loader">
     <div class="loader-text-wrapper">
@@ -307,10 +306,12 @@ const AUDIO_BLOCKS = [
 
 const STARS = document.getElementById("stars")
 const GLASS = document.getElementById("glass")
+const LOADING_SCREEN = document.getElementById("loader")
 
 const PLAY_PAUSE_BTN = document.getElementById("playPause");
-const PLAY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><style>svg{fill:#03ffc3}</style><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>`;
-const PAUSE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><style>svg{fill:#03ffc3}</style><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/></svg>`;
+const RESET_BTN = document.getElementById("reset");
+const PLAY_ICON = '<i class="fa-solid fa-play"></i>';
+const PAUSE_ICON = '<i class="fa-solid fa-pause"></i>';
 
 const SCALES = {
   cymbal: 0.75,
@@ -339,17 +340,21 @@ const sources = {};
     source.connect(analyser);
     analyser.connect(context.destination);
     sources[id] = analyser;
+    music.load()
+    music.addEventListener('canplaythrough', () => {
+      console.log('lets goooo', id)
+    })
   });
   PLAY_PAUSE_BTN.innerHTML = PLAY_ICON;
   PLAY_PAUSE_BTN.addEventListener("click", togglePlaying);
-  document.body.addEventListener("keyup", e => {
-    if (e.code === "Space") togglePlaying()
-  })
+  RESET_BTN.addEventListener("click", reset)
 })();
 
 function togglePlaying() {
   isPlaying = !isPlaying;
+  isPlaying ? startContext() : stopContext();
   AUDIO_BLOCKS.forEach(isPlaying ? playTrack : pauseTrack);
+  PLAY_PAUSE_BTN.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
 }
 
 function getVisual(el) {
@@ -361,29 +366,73 @@ function getAudioTrack(el) {
 }
 
 function playTrack(block) {
-  startContext();
   const id = block.id;
   const visualToChange = getVisual(block);
   const music = getAudioTrack(block);
   music.play();
+  const analyser = sources[id];
+  animationIds[id] = getNextFrame(id, visualToChange, analyser);
+  document.body.style.cursor = "none"
+  if (LOADING_SCREEN.style.display === "flex") LOADING_SCREEN.style.display = "none"
+
+  music.addEventListener('waiting', function letLoad(e) {
+    AUDIO_BLOCKS.forEach(pauseTrack);
+    LOADING_SCREEN.style.display = "flex"
+    music.addEventListener('canplay', () => {
+      AUDIO_BLOCKS.forEach(playTrack)
+      LOADING_SCREEN.style.display = "none"
+    })
+  })
   music.addEventListener("ended", function resetTrack(e) {
     e.target.currentTime = 0
     isPlaying = false
     PLAY_PAUSE_BTN.innerHTML = PLAY_ICON;
     document.body.style.cursor = "auto"
   })
-  const analyser = sources[id];
-  animationIds[id] = getNextFrame(id, visualToChange, analyser);
-  PLAY_PAUSE_BTN.innerHTML = PAUSE_ICON;
-  document.body.style.cursor = "none"
 }
 
 function pauseTrack(block) {
+  stopContext()
   getAudioTrack(block).pause();
-  pauseContext()
   cancelAnimationFrame(animationIds[block.id]);
   PLAY_PAUSE_BTN.innerHTML = PLAY_ICON;
   document.body.style.cursor = "auto"
+}
+
+function reset() {
+  if (isPlaying) AUDIO_BLOCKS.forEach(pauseTrack)
+  AUDIO_BLOCKS.forEach(function resetTrack(block) {
+    const id = block.id
+    const music = getAudioTrack(block)
+    const visualToChange = getVisual(block)
+    music.currentTime = 0
+    const timer = setTimeout(() => {
+      if (id === 'hiHat1') {
+        visualToChange.style.opacity = 0
+        GLASS.style.opacity = 0
+      } else if (id === "hiHat2") {
+        visualToChange.style.opacity = 0
+        STARS.style.opacity = 0
+      } else if (id === "kick") {
+        visualToChange.style.transform = `translateX(-50%) scale(0)`;
+        visualToChange.style.opacity = 0
+        visualToChange.style.filter = `saturate(0%)`
+      } else if (id === "snare") {
+        visualToChange.style.transform = `scale(0)`;
+        visualToChange.style.filter = `saturate(0%)`
+      } else if (id === "bass") {
+        visualToChange.style.transform = `translateX(-50%) scale(0)`;
+        visualToChange.style.opacity = 0
+      } else if (id === "cymbal") {
+        visualToChange.style.filter = `contrast(0%)`
+        visualToChange.style.transform = `translateX(-50%) scale(0)`;
+      } else if (id === "synths") {
+        visualToChange.style.backgroundColor = "#000000"
+        visualToChange.style.opacity = 0
+      } 
+      clearTimeout(timer)
+    }, 100)
+  })
 }
 
 function getNextFrame(id, visualToChange, analyser) {
@@ -423,7 +472,7 @@ function startContext() {
   context.resume();
 }
 
-function pauseContext() {
+function stopContext() {
   context.suspend();
 }
 
