@@ -8,13 +8,35 @@
   <title>Passing</title>
 </head>
 <style>
-  body {
+body {
   margin: 0;
   width: 100%;
   height: 100%;
   background-color: #000000;
   overflow: hidden;
   position: relative;
+}
+
+#loader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #00000055;
+  /* display: flex; */
+  justify-content: center;
+  align-items: center;
+  display: none;
+  z-index: 10;
+}
+
+.loader-text-wrapper {
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  padding: 32px;
+  background-color: #FFFFFF55;
+  display: flex;
+  flex-direction: column;
 }
 
 .sound {
@@ -44,13 +66,7 @@
 }
 
 #hiHat1 .sound {
-  /* background-color: #37330d; */
-  position: absolute;
-  top: 0;
-  height: 150vh;
-  width: 150vw;
-  opacity: 0;
-  z-index: 5;
+  background-color: #fbeb3d;
 }
 
 #hiHat2 .sound {
@@ -140,6 +156,29 @@
   opacity: 1;
 }
 
+#reset {
+  height: 100%;
+  width: 5vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #00000000;
+  border: none;
+  font-size: 3rem;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+#reset:focus {
+  box-shadow: 0px 0px 5px 1px  #03FFC3, inset 0px 0px 5px 1px  #03FFC3;
+  outline: none;
+}
+
+#reset i {
+  color:  #03FFC3;
+  opacity: 1;
+}
+
 #stars {
   position: absolute;
   display: flex;
@@ -152,8 +191,8 @@
 }
 
 #glass {
-  position: absolute;
-  background-image: url(https://adam-thometz.s3.us-east-2.amazonaws.com/passing/textures/glass-texture.png);
+  position: fixed;
+  background-image: url(/textures/glass-texture.png);
   display: flex;
   top: 0;
   left: 0;
@@ -164,7 +203,7 @@
 }
 
 #stars div {
-  background-image: url(https://adam-thometz.s3.us-east-2.amazonaws.com/passing/textures/galaxy.svg);
+  background-image: url(/textures/galaxy.svg);
   width: 100%;
   height: 100%;
 }
