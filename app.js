@@ -10,8 +10,10 @@ const AUDIO_BLOCKS = [
 
 const STARS = document.getElementById("stars")
 const GLASS = document.getElementById("glass")
+const LOADING_SCREEN = document.getElementById("loader")
 
 const PLAY_PAUSE_BTN = document.getElementById("playPause");
+const RESET_BTN = document.getElementById("reset");
 const PLAY_ICON = '<i class="fa-solid fa-play"></i>';
 const PAUSE_ICON = '<i class="fa-solid fa-pause"></i>';
 
@@ -42,14 +44,21 @@ const sources = {};
     source.connect(analyser);
     analyser.connect(context.destination);
     sources[id] = analyser;
+    music.load()
+    music.addEventListener('canplaythrough', () => {
+      console.log('lets goooo', id)
+    })
   });
   PLAY_PAUSE_BTN.innerHTML = PLAY_ICON;
   PLAY_PAUSE_BTN.addEventListener("click", togglePlaying);
+  RESET_BTN.addEventListener("click", reset)
 })();
 
 function togglePlaying() {
   isPlaying = !isPlaying;
+  isPlaying ? startContext() : stopContext();
   AUDIO_BLOCKS.forEach(isPlaying ? playTrack : pauseTrack);
+  PLAY_PAUSE_BTN.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
 }
 
 function getVisual(el) {
@@ -61,30 +70,73 @@ function getAudioTrack(el) {
 }
 
 function playTrack(block) {
-  startContext();
   const id = block.id;
   const visualToChange = getVisual(block);
   const music = getAudioTrack(block);
   music.play();
+  const analyser = sources[id];
+  animationIds[id] = getNextFrame(id, visualToChange, analyser);
+  document.body.style.cursor = "none"
+  if (LOADING_SCREEN.style.display === "flex") LOADING_SCREEN.style.display = "none"
+
+  music.addEventListener('waiting', function letLoad(e) {
+    AUDIO_BLOCKS.forEach(pauseTrack);
+    LOADING_SCREEN.style.display = "flex"
+    music.addEventListener('canplay', () => {
+      AUDIO_BLOCKS.forEach(playTrack)
+      LOADING_SCREEN.style.display = "none"
+    })
+  })
   music.addEventListener("ended", function resetTrack(e) {
     e.target.currentTime = 0
     isPlaying = false
     PLAY_PAUSE_BTN.innerHTML = PLAY_ICON;
     document.body.style.cursor = "auto"
   })
-  const analyser = sources[id];
-  animationIds[id] = getNextFrame(id, visualToChange, analyser);
-  PLAY_PAUSE_BTN.innerHTML = PAUSE_ICON;
-  document.body.style.cursor = "none"
-  // block.addEventListener("click", toggleMute);
 }
 
 function pauseTrack(block) {
+  stopContext()
   getAudioTrack(block).pause();
   cancelAnimationFrame(animationIds[block.id]);
   PLAY_PAUSE_BTN.innerHTML = PLAY_ICON;
   document.body.style.cursor = "auto"
-  // block.removeEventListener("click", toggleMute);
+}
+
+function reset() {
+  if (isPlaying) AUDIO_BLOCKS.forEach(pauseTrack)
+  AUDIO_BLOCKS.forEach(function resetTrack(block) {
+    const id = block.id
+    const music = getAudioTrack(block)
+    const visualToChange = getVisual(block)
+    music.currentTime = 0
+    const timer = setTimeout(() => {
+      if (id === 'hiHat1') {
+        visualToChange.style.opacity = 0
+        GLASS.style.opacity = 0
+      } else if (id === "hiHat2") {
+        visualToChange.style.opacity = 0
+        STARS.style.opacity = 0
+      } else if (id === "kick") {
+        visualToChange.style.transform = `translateX(-50%) scale(0)`;
+        visualToChange.style.opacity = 0
+        visualToChange.style.filter = `saturate(0%)`
+      } else if (id === "snare") {
+        visualToChange.style.transform = `scale(0)`;
+        visualToChange.style.filter = `saturate(0%)`
+      } else if (id === "bass") {
+        visualToChange.style.transform = `translateX(-50%) scale(0)`;
+        visualToChange.style.opacity = 0
+      } else if (id === "cymbal") {
+        visualToChange.style.filter = `contrast(0%)`
+        visualToChange.style.transform = `translateX(-50%) scale(0)`;
+      } else if (id === "synths") {
+        visualToChange.style.backgroundColor = "#000000"
+        visualToChange.style.opacity = 0
+      } 
+      clearTimeout(timer)
+    }, 100)
+  })
 }
 
 function getNextFrame(id, visualToChange, analyser) {
