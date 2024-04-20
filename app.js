@@ -1,8 +1,7 @@
 const AUDIO_BLOCKS = [
   document.getElementById("cymbal"),
   document.getElementById("synths"),
-  document.getElementById("hiHat1"),
-  document.getElementById("hiHat2"),
+  document.getElementById("hiHat"),
   document.getElementById("snare"),
   document.getElementById("kick"),
   document.getElementById("bass"),
@@ -20,8 +19,7 @@ const PAUSE_ICON = '<i class="fa-solid fa-pause"></i>';
 const SCALES = {
   cymbal: 0.75,
   synths: 3,
-  hiHat1: 1.2,
-  hiHat2: 1.2,
+  hiHat: 1.2,
   snare: 0.2,
   kick: 1,
   bass: 0.3,
@@ -111,11 +109,9 @@ function reset() {
     const visualToChange = getVisual(block)
     music.currentTime = 0
     const timer = setTimeout(() => {
-      if (id === 'hiHat1') {
+      if (id === 'hiHat') {
         visualToChange.style.opacity = 0
         GLASS.style.opacity = 0
-      } else if (id === "hiHat2") {
-        visualToChange.style.opacity = 0
         STARS.style.opacity = 0
       } else if (id === "kick") {
         visualToChange.style.transform = `translateX(-50%) scale(0)`;
@@ -135,37 +131,43 @@ function reset() {
         visualToChange.style.opacity = 0
       } 
       clearTimeout(timer)
-    }, 100)
+    }, 300)
   })
 }
 
 function getNextFrame(id, visualToChange, analyser) {
   const fbcArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteFrequencyData(fbcArray);
-  
   const average = fbcArray.reduce((accum, val) => accum + val, 0) / fbcArray.length;
-  if (id === 'hiHat1') {
-    visualToChange.style.opacity = (average / 100) * SCALES[id]
-    GLASS.style.opacity = (average / 500) * SCALES[id]
-  } else if (id === "hiHat2") {
-    visualToChange.style.opacity = (average / 100) * SCALES[id]
-    STARS.style.opacity = (average / 200) * SCALES[id]
-  } else if (id === "kick") {
-    visualToChange.style.transform = `translateX(-50%) scale(${average * SCALES[id]})`;
-    visualToChange.style.opacity = (average / 10) * SCALES[id]
-    visualToChange.style.filter = `saturate(${average * (SCALES[id] * 50)}%)`
-  } else if (id === "snare") {
-    visualToChange.style.transform = `scale(${average * SCALES[id]})`;
-    visualToChange.style.filter = `saturate(${average * (SCALES[id] * 20)}%)`
-  } else if (id === "bass") {
-    visualToChange.style.transform = `translateX(-50%) scale(${average * SCALES[id]})`;
-    visualToChange.style.opacity = (average / 10) * SCALES[id]
-  } else if (id === "cymbal") {
-    visualToChange.style.filter = `contrast(${average * (SCALES[id] * 20)}%)`
-    visualToChange.style.transform = `translateX(-50%) scale(${average * SCALES[id]})`;
-  } else if (id === "synths") {
-    visualToChange.style.backgroundColor = generateColor((average * SCALES[id]) % 12)
-    visualToChange.style.opacity = (average / 100) * SCALES[id]
+  if (id === 'hiHat') {
+    const freqCutoff = (Math.floor(fbcArray.length/3) * 2) - 150
+    const averageForStars = fbcArray.slice(0, freqCutoff).reduce((accum, val) => accum + val, 0) / (fbcArray.length/2);
+    const averageForGlass = fbcArray.slice(freqCutoff).reduce((accum, val) => accum + val, 0) / (fbcArray.length/2);
+    const glassOpacity = (averageForGlass / 200) * SCALES[id]
+    const starsOpacity = (averageForStars / 600) * SCALES[id]
+    console.log('glass:', glassOpacity)
+    console.log('stars:', starsOpacity)
+    GLASS.style.opacity = glassOpacity
+    STARS.style.opacity = starsOpacity - glassOpacity
+  } else {
+    if (id === "kick") {
+      visualToChange.style.transform = `translateX(-50%) scale(${average * SCALES[id]})`;
+      visualToChange.style.opacity = (average / 10) * SCALES[id]
+      visualToChange.style.filter = `saturate(${average * (SCALES[id] * 50)}%)`
+    } else if (id === "snare") {
+      visualToChange.style.transform = `scale(${average * SCALES[id]})`;
+      visualToChange.style.opacity = (average / 10) * SCALES[id]
+      visualToChange.style.filter = `saturate(${average * (SCALES[id] * 20)}%)`
+    } else if (id === "bass") {
+      visualToChange.style.transform = `translateX(-50%) scale(${average * SCALES[id]})`;
+      visualToChange.style.opacity = (average / 10) * SCALES[id]
+    } else if (id === "cymbal") {
+      visualToChange.style.filter = `contrast(${average * (SCALES[id] * 20)}%)`
+      visualToChange.style.transform = `translateX(-50%) scale(${average * SCALES[id]})`;
+    } else if (id === "synths") {
+      visualToChange.style.backgroundColor = generateColor((average * SCALES[id]) % 12)
+      visualToChange.style.opacity = (average / 100) * SCALES[id]
+    }
   } 
   if (isPlaying) {
     requestAnimationFrame(() => getNextFrame(id, visualToChange, analyser));
