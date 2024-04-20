@@ -453,8 +453,6 @@ function getNextFrame(id, visualToChange, analyser) {
     const averageForGlass = fbcArray.slice(freqCutoff).reduce((accum, val) => accum + val, 0) / (fbcArray.length/2);
     const glassOpacity = (averageForGlass / 200) * SCALES[id]
     const starsOpacity = (averageForStars / 600) * SCALES[id]
-    console.log('glass:', glassOpacity)
-    console.log('stars:', starsOpacity)
     GLASS.style.opacity = glassOpacity
     STARS.style.opacity = starsOpacity - glassOpacity
   } else {
