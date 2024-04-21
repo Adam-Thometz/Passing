@@ -10,6 +10,7 @@ const AUDIO_BLOCKS = [
 const STARS = document.getElementById("stars")
 const GLASS = document.getElementById("glass")
 const LOADING_SCREEN = document.getElementById("loader")
+const THANKS_SCREEN = document.getElementById("thanks")
 
 const PLAY_PAUSE_BTN = document.getElementById("playPause");
 const RESET_BTN = document.getElementById("reset");
@@ -76,6 +77,7 @@ function playTrack(block) {
   animationIds[id] = getNextFrame(id, visualToChange, analyser);
   document.body.style.cursor = "none"
   if (LOADING_SCREEN.style.display === "flex") LOADING_SCREEN.style.display = "none"
+  if (THANKS_SCREEN.style.display === "flex") THANKS_SCREEN.style.display = "none"
 
   music.addEventListener('waiting', function letLoad(e) {
     AUDIO_BLOCKS.forEach(pauseTrack);
@@ -90,6 +92,7 @@ function playTrack(block) {
     isPlaying = false
     PLAY_PAUSE_BTN.innerHTML = PLAY_ICON;
     document.body.style.cursor = "auto"
+    THANKS_SCREEN.style.display = "flex"
   })
 }
 
