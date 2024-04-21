@@ -17,26 +17,30 @@ body {
   position: relative;
 }
 
-#loader {
+.popup {
   position: absolute;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
   background-color: #00000055;
-  /* display: flex; */
   justify-content: center;
   align-items: center;
   display: none;
-  z-index: 10;
+  z-index: 20;
 }
 
-.loader-text-wrapper {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+.popup-text-wrapper {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
   padding: 32px;
   background-color: #FFFFFF55;
   display: flex;
   flex-direction: column;
+}
+
+.popup-text-wrapper a {
+  text-decoration: none;
 }
 
 .sound {
@@ -122,7 +126,6 @@ body {
   left: 50%;
   height: 10vh;
   transform: translateX(-50%);
-  /* width: 100vw; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -260,9 +263,16 @@ body {
 
 </style>
 <body>
-  <div id="loader">
-    <div class="loader-text-wrapper">
-      <p id="loaderText">Oops, we had a hiccup. Wait a few seconds and press Play</p>
+  <div id="loader" class="popup">
+    <div class="popup-text-wrapper">
+      <p>Oops, we had a hiccup. Wait a few seconds and press Play</p>
+    </div>
+  </div>
+  <div id="thanks" class="popup">
+    <div class="popup-text-wrapper">
+      <p>
+        Thanks for watching! You can show your support on <a href="https://buymeacoffee.com/teslasghost">Buy Me a Coffee</a>
+      </p>
     </div>
   </div>
   <div id="stars">
@@ -333,6 +343,7 @@ const AUDIO_BLOCKS = [
 const STARS = document.getElementById("stars")
 const GLASS = document.getElementById("glass")
 const LOADING_SCREEN = document.getElementById("loader")
+const THANKS_SCREEN = document.getElementById("thanks")
 
 const PLAY_PAUSE_BTN = document.getElementById("playPause");
 const RESET_BTN = document.getElementById("reset");
@@ -399,6 +410,7 @@ function playTrack(block) {
   animationIds[id] = getNextFrame(id, visualToChange, analyser);
   document.body.style.cursor = "none"
   if (LOADING_SCREEN.style.display === "flex") LOADING_SCREEN.style.display = "none"
+  if (THANKS_SCREEN.style.display === "flex") THANKS_SCREEN.style.display = "none"
 
   music.addEventListener('waiting', function letLoad(e) {
     AUDIO_BLOCKS.forEach(pauseTrack);
@@ -406,6 +418,7 @@ function playTrack(block) {
     music.addEventListener('canplay', () => {
       AUDIO_BLOCKS.forEach(playTrack)
       LOADING_SCREEN.style.display = "none"
+      
     })
   })
   music.addEventListener("ended", function resetTrack(e) {
@@ -413,6 +426,7 @@ function playTrack(block) {
     isPlaying = false
     PLAY_PAUSE_BTN.innerHTML = PLAY_ICON;
     document.body.style.cursor = "auto"
+    THANKS_SCREEN.style.display = "flex"
   })
 }
 
