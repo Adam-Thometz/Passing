@@ -14,7 +14,6 @@ body {
   width: 100vw;
   height: 100vh;
   background-color: #00000055;
-  /* display: flex; */
   justify-content: center;
   align-items: center;
   display: none;
@@ -67,8 +66,7 @@ body {
 
 #snare .sound {
   position: absolute;
-  z-index: 1;
-  top: 5vh;
+  top: 45vh;
   right: 5%;
   height: 100px;
   width: 100px;
@@ -76,7 +74,7 @@ body {
   border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, #EE82EE 0%, #FFFF00 100%);
   opacity: 0.3;
-  animation: zigzag 20s ease-in-out infinite both;
+  animation: zigzag 40s ease-in-out infinite both;
 }
 
 #kick .sound {
@@ -104,6 +102,7 @@ body {
   border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, #b10000 0%, #e97612 100%);
   opacity: 0.5;
+  transition-duration: 100ms;
 }
 
 #controls {
@@ -112,7 +111,6 @@ body {
   left: 50%;
   height: 10vh;
   transform: translateX(-50%);
-  /* width: 100vw; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -226,10 +224,24 @@ body {
   from {
     right: 5%;
   }
-  50% {
+  25% {
     right: 95%;
+    height: 150px;
+    width: 150px;
+  }
+  50% {
+    right: 5%;
+    height: 200px;
+    width: 200px;
+  }
+  75% {
+    right: 95%;
+    height: 150px;
+    width: 150px;
   }
   to {
     right: 5%;
+    height: 100px;
+    width: 100px;
   }
 }
