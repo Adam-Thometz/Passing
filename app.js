@@ -36,7 +36,7 @@ const sources = {};
 
 (function init() {
   AUDIO_BLOCKS.forEach(function createMediaSource(block) {
-    const id = block.id;
+    const { id } = block;
     const music = getAudioTrack(block);
     const analyser = context.createAnalyser();
     const source = context.createMediaElementSource(music);
@@ -69,12 +69,12 @@ function getAudioTrack(el) {
 }
 
 function playTrack(block) {
-  const id = block.id;
+  const { id } = block;
   const visualToChange = getVisual(block);
   const music = getAudioTrack(block);
   music.play();
   const analyser = sources[id];
-  animationIds[id] = getNextFrame(id, visualToChange, analyser);
+  animationIds[id] = getNextFrame({id, music, visualToChange, analyser});
   document.body.style.cursor = "none"
   if (LOADING_SCREEN.style.display === "flex") LOADING_SCREEN.style.display = "none"
   if (THANKS_SCREEN.style.display === "flex") THANKS_SCREEN.style.display = "none"
@@ -105,40 +105,37 @@ function pauseTrack(block) {
 }
 
 function reset() {
-  if (isPlaying) AUDIO_BLOCKS.forEach(pauseTrack)
   AUDIO_BLOCKS.forEach(function resetTrack(block) {
-    const id = block.id
+    if (isPlaying) pauseTrack(block)
+    const { id } = block
     const music = getAudioTrack(block)
     const visualToChange = getVisual(block)
     music.currentTime = 0
-    const timer = setTimeout(() => {
-      if (id === 'hiHat') {
-        visualToChange.style.opacity = 0
-        GLASS.style.opacity = 0
-        STARS.style.opacity = 0
-      } else if (id === "kick") {
-        visualToChange.style.transform = `translateX(-50%) scale(0)`;
-        visualToChange.style.opacity = 0
-        visualToChange.style.filter = `saturate(0%)`
-      } else if (id === "snare") {
-        visualToChange.style.transform = `scale(0)`;
-        visualToChange.style.filter = `saturate(0%)`
-      } else if (id === "bass") {
-        visualToChange.style.transform = `translateX(-50%) scale(0)`;
-        visualToChange.style.opacity = 0
-      } else if (id === "cymbal") {
-        visualToChange.style.filter = `contrast(0%)`
-        visualToChange.style.transform = `translateX(-50%) scale(0)`;
-      } else if (id === "synths") {
-        visualToChange.style.backgroundColor = "#000000"
-        visualToChange.style.opacity = 0
-      } 
-      clearTimeout(timer)
-    }, 300)
+    if (id === 'hiHat') {
+      visualToChange.style.opacity = 0
+      GLASS.style.opacity = 0
+      STARS.style.opacity = 0
+    } else if (id === "kick") {
+      visualToChange.style.transform = `translateX(-50%) scale(0)`;
+      visualToChange.style.opacity = 0
+      visualToChange.style.filter = `saturate(0%)`
+    } else if (id === "snare") {
+      visualToChange.style.transform = `scale(0)`;
+      visualToChange.style.filter = `saturate(0%)`
+    } else if (id === "bass") {
+      visualToChange.style.transform = `translateX(-50%) scale(0)`;
+      visualToChange.style.opacity = 0
+    } else if (id === "cymbal") {
+      visualToChange.style.filter = `contrast(0%)`
+      visualToChange.style.transform = `translateX(-50%) scale(0)`;
+    } else if (id === "synths") {
+      visualToChange.style.backgroundColor = "#000000"
+      visualToChange.style.opacity = 0
+    }
   })
 }
 
-function getNextFrame(id, visualToChange, analyser) {
+function getNextFrame({id, music, visualToChange, analyser}) {
   const fbcArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteFrequencyData(fbcArray);
   const average = fbcArray.reduce((accum, val) => accum + val, 0) / fbcArray.length;
@@ -146,8 +143,10 @@ function getNextFrame(id, visualToChange, analyser) {
     const freqCutoff = (Math.floor(fbcArray.length/3) * 2) - 150
     const averageForStars = fbcArray.slice(0, freqCutoff).reduce((accum, val) => accum + val, 0) / (fbcArray.length/2);
     const averageForGlass = fbcArray.slice(freqCutoff).reduce((accum, val) => accum + val, 0) / (fbcArray.length/2);
+    const { currentTime } = music;
+    const inSectionB = currentTime > 0.265 && currentTime < 0.635
     const glassOpacity = (averageForGlass / 200) * SCALES[id]
-    const starsOpacity = (averageForStars / 400) * SCALES[id]
+    const starsOpacity = (averageForStars / (inSectionB ? 200 : 600)) * SCALES[id]
     GLASS.style.opacity = glassOpacity
     STARS.style.opacity = starsOpacity - glassOpacity
   } else {
@@ -171,7 +170,7 @@ function getNextFrame(id, visualToChange, analyser) {
     }
   } 
   if (isPlaying) {
-    requestAnimationFrame(() => getNextFrame(id, visualToChange, analyser));
+    requestAnimationFrame(() => getNextFrame({id, music, visualToChange, analyser}));
   }
 }
 
